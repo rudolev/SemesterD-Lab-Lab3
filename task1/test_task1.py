@@ -15,26 +15,23 @@ def run_task1(args, input_data=None):
     return stdout, stderr
 
 def test_basic_vigenere():
-    print("Testing Basic Vigenere (+V1)...")
     # 'a' (97) + 1 = 'b' (98)
     # 'A' (65) + 1 = 'B' (66)
     out, err = run_task1(["+V1"], input_data=b"abcABC")
     if out == b"bcdBCD":
-        print(" [PASS] Basic shift works.")
+        print(" [PASS] Basic shift works, abcABC => bcdBCD.")
     else:
         print(f" [FAIL] Expected b'bcdBCD', got {out}")
 
 def test_long_key():
-    print("Testing Long Key (+V123)...")
     # a+1=b, b+2=d, c+3=f, d+1=e ...
     out, err = run_task1(["+V123"], input_data=b"abcd")
     if out == b"bdfe":
-        print(" [PASS] Key wrap-around works.")
+        print(" [PASS] Key wrap-around works, abcd => bdfe.")
     else:
         print(f" [FAIL] Expected b'bdfe', got {out}")
 
 def test_input_file():
-    print("Testing Input File (-i)...")
     with open("test_in.txt", "wb") as f:
         f.write(b"hello")
     
@@ -46,7 +43,6 @@ def test_input_file():
     os.remove("test_in.txt")
 
 def test_output_file():
-    print("Testing Output File (-o)...")
     run_task1(["-otest_out.txt", "+V0"], input_data=b"secret")
     
     if os.path.exists("test_out.txt"):
@@ -61,7 +57,6 @@ def test_output_file():
         print(" [FAIL] Output file not created.")
 
 def test_stderr_debug():
-    print("Testing Stderr Debug Printout...")
     # Task 1.A requires all args printed to stderr
     out, err = run_task1(["-abc", "+V123"])
     if b"-abc" in err and b"+V123" in err:
