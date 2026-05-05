@@ -3,8 +3,8 @@ CC = gcc
 AS = nasm
 LD = ld
 
-CFLAGS = -m32 -Wall -ansi -c -nostdlib -fno-stack-protector
-ASFLAGS = -f elf32
+CFLAGS = -m32 -Wall -g -ansi -c -nostdlib -fno-stack-protector
+ASFLAGS = -f elf32 -g -F dwarf
 LDFLAGS = -m elf_i386
 
 # Targets

