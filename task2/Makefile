@@ -8,10 +8,10 @@ ASFLAGS = -f elf32
 LDFLAGS = -m elf_i386
 
 # Targets
-all: task0
+all: task2
 
-task0: start.o main.o util.o
-	$(LD) $(LDFLAGS) start.o main.o util.o -o task0
+task2: start.o main.o util.o
+	$(LD) $(LDFLAGS) start.o main.o util.o -o task2
 
 start.o: start.s
 	$(AS) $(ASFLAGS) start.s -o start.o
@@ -24,4 +24,4 @@ main.o: main.c
 
 # Clean up build files
 clean:
-	rm -f *.o task0
+	rm -f *.o task2
