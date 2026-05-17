@@ -1,0 +1,15 @@
+{
+  "name": "Ultra-Light Alpine Dev",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        // Add only essential extensions here to keep startup fast
+      ]
+    }
+  },
+  // Connect as root so you don't run into 'apk add' permission issues
+  "remoteUser": "root"
+}

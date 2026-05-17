@@ -64,7 +64,30 @@ def test_stderr_debug():
     else:
         print(" [FAIL] Stderr missing debug info.")
 
+def rebuild(input_data=None):
+    print(" Rebuilding binary")
+    # Split the shell path and its flags into separate list elements
+    cmd = ['/bin/sh', '-c', 'make clean && make']
+    
+    process = subprocess.Popen(
+        cmd,
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=False # Working with bytes
+    )
+    
+    # If input_data is a string, it needs to be encoded to bytes 
+    # since text=False. If it's already bytes, you can pass it directly.
+    if isinstance(input_data, str):
+        input_data = input_data.encode('utf-8')
+        
+    stdout, stderr = process.communicate(input=input_data)
+    return stdout, stderr, process.returncode
+
+
 if __name__ == "__main__":
+    rebuild()
     if not os.path.exists("./task1"):
         print("Error: 'task1' binary not found. Run 'make' first.")
     else:
