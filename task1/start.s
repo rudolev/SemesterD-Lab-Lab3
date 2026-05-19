@@ -47,6 +47,7 @@ main:
     mov    eax, 4           ; Load system call number 4 (SYS_WRITE)
     int    0x80             ; Execute syscall: print argument to stderr
     
+    ; Print \n
     mov    eax, 4           ; Reset EAX to 4 (SYS_WRITE)
     mov    ebx, 2           ; Target stderr
     mov    ecx, newline     ; Buffer points to the newline character constant
@@ -127,8 +128,11 @@ main:
     mov    edi, [v_key]     ; Load key string pointer into EDI
     mov    ebx, [v_idx]     ; Load current key index into EBX
     mov    cl, [edi + ebx]  ; Load current key character into CL
-    sub    cl, '0'          ; Convert ASCII digit to numeric value (e.g., '1' -> 1)
-    add    al, cl           ; Add numeric key value to the input character (encode)
+
+    ; --- UPPERCASE ONLY KEY LOGIC ---
+    sub    cl, 'A'          ; Map 'A' -> 0, 'B' -> 1, 'C' -> 2, etc.
+
+    add    al, cl           ; Add numeric key offset to the input character (encode)
     mov    [char_buf], al   ; Store encoded character back in buffer
     
     ; Increment and wrap key index

@@ -1,3 +1,4 @@
+// TODO - need to check on 32bit system.
 #include "util.h"
 
 #define SYS_GETDENTS 141
