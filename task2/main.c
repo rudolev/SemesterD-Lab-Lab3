@@ -36,7 +36,7 @@ void exit() {
 
 
 int main(int argc, char *argv[]) {
-    int fd, nread, i, bpos;
+    int fd = -1, nread, i, bpos;
     char buf[BUF_SIZE];
     struct linux_dirent *d;
     char *prefix = 0;
@@ -54,14 +54,14 @@ int main(int argc, char *argv[]) {
     /* Open current directory "." */
     fd = open(".");
     if (fd < 0) {
-        exit(); /* TODO - change this to goto lblCleanup. */ 
+        goto lblCleanup;
     }
     
     /* Get directory entries */
     nread = system_call(SYS_GETDENTS, fd, buf, BUF_SIZE);
     if (nread <= 0) {
         print("Error in getdents\n");
-        exit();
+        goto lblCleanup;
     }
     
     /* Iterate through entries */
@@ -88,6 +88,9 @@ int main(int argc, char *argv[]) {
         bpos += d->d_reclen;
     }
 
-    close(fd);
+lblCleanup:
+    if (fd >= 0) {
+        close(fd);
+    }
     return 0;
 }
