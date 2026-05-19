@@ -5,6 +5,9 @@ section .data
     v_key: dd 0
     v_key_len: dd 0
     v_idx: dd 0
+    ; Error message for file opening failure
+    err_msg: db "Error: Failed to open input file.", 10
+    err_msg_len: equ $ - err_msg
 
 section .bss
     char_buf: resb 1
@@ -77,10 +80,14 @@ main:
     cmp    byte [edi+1], 'i'
     jne    .check_out
     add    edi, 2
-    mov    eax, 5
-    mov    ebx, edi
-    mov    ecx, 0
+    mov    eax, 5         ; sys_open
+    mov    ebx, edi       ; filename
+    mov    ecx, 0         ; O_RDONLY
     int    0x80
+    
+    ; --- ERROR HANDLING FOR FAILED OPEN ---
+    cmp    eax, 0
+    jl     .open_failed   ; If eax is negative, sys_open failed
     mov    [infile], eax
     jmp    .next_arg
 
@@ -88,10 +95,10 @@ main:
     cmp    byte [edi+1], 'o'
     jne    .next_arg
     add    edi, 2
-    mov    eax, 5
-    mov    ebx, edi
-    mov    ecx, 0x241
-    mov    edx, 0644h
+    mov    eax, 5         ; sys_open
+    mov    ebx, edi       ; filename
+    mov    ecx, 0x241     ; O_WRONLY | O_CREAT | O_TRUNC
+    mov    edx, 0666q     ; <-- Updated permission to 666 (Octal in NASM uses 'q' or 'o')
     int    0x80
     mov    [outfile], eax
 
@@ -152,4 +159,20 @@ main:
 .finish:
     mov    esp, ebp
     pop    ebp
+    ret
+
+; ==============================================================================
+; ERROR HANDLING ROUTINE
+; ==============================================================================
+.open_failed:
+    mov    eax, 4          ; sys_write
+    mov    ebx, 2          ; stderr
+    mov    ecx, err_msg    ; message
+    mov    edx, err_msg_len
+    int    0x80
+    
+    ; Clean up the stack frame and exit with code 1
+    mov    esp, ebp
+    pop    ebp
+    mov    eax, 1          ; Return status 1 to _start, which will exit
     ret
