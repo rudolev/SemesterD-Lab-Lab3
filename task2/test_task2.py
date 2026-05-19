@@ -10,12 +10,12 @@ def rebuild():
     """Compiles the task2 binary using the Makefile."""
     print("[*] Rebuilding binary...")
     cmd = ['/bin/sh', '-c', 'make clean && make']
-    process = subprocess.run(cmd, capture_output=True, text=True)
+    process = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=False)
     if process.returncode != 0:
-        print(f"[-] Compilation failed:\n{process.stderr}")
+        print("[-] Compilation failed:\n{0}".format(process.stderr.decode('utf-8', errors='ignore')))
         return False
     if not os.path.exists(BINARY_NAME):
-        print(f"[-] Compiled successfully, but '{BINARY_NAME}' binary was not found.")
+        print("[-] Compiled successfully, but '{0}' binary was not found.".format(BINARY_NAME))
         return False
     return True
 
@@ -29,7 +29,6 @@ def setup_sandbox():
     shutil.copy(BINARY_NAME, os.path.join(SANDBOX_DIR, BINARY_NAME))
     
     # Create target files with explicit content to track sizing differences later
-    # Target files for 'v' prefix
     with open(os.path.join(SANDBOX_DIR, "v_target1.txt"), "wb") as f:
         f.write(b"Initial content of target 1\n")
     with open(os.path.join(SANDBOX_DIR, "v_target2.txt"), "wb") as f:
@@ -45,8 +44,8 @@ def run_sandbox_binary(args):
     process = subprocess.run(
         cmd,
         cwd=SANDBOX_DIR,
-        capture_output=True,
-        text=False # Keep raw bytes output
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE
     )
     return process.stdout, process.stderr, process.returncode
 
@@ -64,9 +63,9 @@ def test_task2a_directory_listing():
     passed = True
     for filename in expected_files:
         if filename in output_str:
-            print(f" [PASS] Found expected file in listing: {filename}")
+            print(" [PASS] Found expected file in listing: {0}".format(filename))
         else:
-            print(f" [FAIL] Missing file from listing: {filename}")
+            print(" [FAIL] Missing file from listing: {0}".format(filename))
             passed = False
             
     if b"VIRUS ATTACHED" in stdout:
@@ -107,15 +106,15 @@ def test_task2b_virus_attachment():
     size_t2_after = os.path.getsize(target2_path)
     
     if size_t1_after > size_t1_before and size_t2_after > size_t2_before:
-        print(f" [PASS] Targeted files grew in size. (v_target1: {size_t1_before} -> {size_t1_after} bytes)")
+        print(" [PASS] Targeted files grew in size. (v_target1: {0} -> {1} bytes)".format(size_t1_before, size_t1_after))
         
         # Verify both grew by the exact same size (size of code_start to code_end block)
         growth_t1 = size_t1_after - size_t1_before
         growth_t2 = size_t2_after - size_t2_before
         if growth_t1 == growth_t2:
-            print(f" [PASS] Consistent virus injection size confirmed ({growth_t1} bytes attached).")
+            print(" [PASS] Consistent virus injection size confirmed ({0} bytes attached).".format(growth_t1))
         else:
-            print(f" [FAIL] Inconsistent growth detected! Target 1 grew by {growth_t1}, Target 2 by {growth_t2}.")
+            print(" [FAIL] Inconsistent growth detected! Target 1 grew by {0}, Target 2 by {1}.".format(growth_t1, growth_t2))
             passed = False
     else:
         print(" [FAIL] Targeted files did not grow. Assembly infector logic failed.")
@@ -136,13 +135,12 @@ def test_error_termination_code():
     print("\n--- Testing Error Exit Codes (0x55) ---")
     setup_sandbox()
     
-    # Remove all read/write permissions from the sandbox directory to force a sys_getdents/sys_open error
+    # Remove all read/write permissions from the sandbox directory to force a sys_getdents failure
     os.chmod(SANDBOX_DIR, 0o000)
     
     try:
-        # Run binary; expecting it to crash gracefully or fail accessing files
         cmd = ["./" + BINARY_NAME]
-        process = subprocess.run(cmd, cwd=SANDBOX_DIR, capture_output=True, timeout=2)
+        process = subprocess.run(cmd, cwd=SANDBOX_DIR, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=2)
         exit_code = process.returncode
     except Exception:
         exit_code = -1
@@ -155,7 +153,7 @@ def test_error_termination_code():
         print(" [PASS] Program terminated with expected exit code 0x55 (85) during an operational failure.")
         return True
     else:
-        print(f" [FAIL] Expected exit code 85 (0x55), but got: {exit_code}")
+        print(" [FAIL] Expected exit code 85 (0x55), but got: {0}".format(exit_code))
         return False
 
 def cleanup():
@@ -171,9 +169,9 @@ if __name__ == "__main__":
             err_code = test_error_termination_code()
             
             print("\n=== Final Test Summary ===")
-            print(f"Task 2.A Directory Listing: {'PASSED' if t2a else 'FAILED'}")
-            print(f"Task 2.B Virus Attachment : {'PASSED' if t2b else 'FAILED'}")
-            print(f"Error Code Framework (0x55): {'PASSED' if err_code else 'FAILED'}")
+            print("Task 2.A Directory Listing: {0}".format('PASSED' if t2a else 'FAILED'))
+            print("Task 2.B Virus Attachment : {0}".format('PASSED' if t2b else 'FAILED'))
+            print("Error Code Framework (0x55): {0}".format('PASSED' if err_code else 'FAILED'))
             
         finally:
             cleanup()
