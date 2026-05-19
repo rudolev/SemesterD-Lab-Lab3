@@ -82,9 +82,17 @@ infector:
     ret
 
 .error:
+    ; 1. Print to stdout
+    mov     eax, 4          ; sys_write syscall number
+    mov     ebx, 1          ; File descriptor 1 (stdout)
+    mov     ecx, error_message  ; Pointer to the string
+    mov     edx, 23          ; Length of the string ("hello" + newline = 6 bytes)
+    int     0x80            ; Invoke kernel
+
     ; The open failed. Exit immediately via direct system call.
     mov     eax, 1          ; sys_exit syscall number
     mov     ebx, 0x55       ; Exit code 0x55
     int     0x80            ; Invoke kernel
-    
+
+error_message: db "Failed to attach VIRUS", 10
 code_end:                   ; Marker for the end of the payload code
