@@ -5,7 +5,6 @@
 #define STDOUT 1
 #define BUF_SIZE 8192
 
-/* Simplified dirent structure for getdents */
 struct linux_dirent {
     unsigned long d_ino;
     unsigned long d_off;
@@ -13,7 +12,6 @@ struct linux_dirent {
     char           d_name[1];
 };
 
-/* External function prototypes */
 extern int system_call(int, ...);
 extern void infection();
 extern void infector(char *);
@@ -27,7 +25,7 @@ int open(char* path) {
 }
 
 void close(int file_descriptor) {
-    system_call(6, file_descriptor, 0, 0); /* sys_close */
+    system_call(6, file_descriptor, 0, 0);
 }
 
 void exit() {
