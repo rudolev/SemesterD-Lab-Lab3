@@ -95,8 +95,8 @@ lblCleanup:
     if (fd >= 0) {
         close(fd);
     }
-    
-    if (failed) {
+
+    if (failed == 1) {
         exit();
     }
     return 0;
